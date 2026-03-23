@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // 🔐 DISCORD WEBHOOK
-const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1485605589110227104/aaQOLRnXtHuX9yQy3kUEDFLx78jQysjaLKrsJvdI5Nf4vO88EAtJfuDkLyI9qqEe5Y84";
+const DISCORD_WEBHOOK = "Your webhook here";
 
 // 🟢 HOME
 app.get("/", (req, res) => {
