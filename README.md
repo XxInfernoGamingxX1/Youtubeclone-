@@ -1,6 +1,6 @@
 # 🔥 Lunify
 
-> A modern, ad-free, account-free video streaming web app powered by YouTube.
+> modern, ad-free, account-free video streaming web app powered by YouTube.
 
 ![Lunify Banner](https://via.placeholder.com/1200x300?text=Lunify)
 
