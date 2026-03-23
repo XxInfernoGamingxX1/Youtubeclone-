@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🔐 YOUR DISCORD WEBHOOK
+// 🔐 DISCORD WEBHOOK
 const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1485605589110227104/aaQOLRnXtHuX9yQy3kUEDFLx78jQysjaLKrsJvdI5Nf4vO88EAtJfuDkLyI9qqEe5Y84";
 
 // 🟢 HOME
@@ -38,50 +38,92 @@ app.get("/search", async (req, res) => {
   }
 });
 
-// 🔔 GITHUB WEBHOOK ROUTE
+// 🔔 GITHUB WEBHOOK ROUTE (EMBED VERSION)
 app.post("/webhook", async (req, res) => {
   const event = req.headers["x-github-event"];
   const data = req.body;
 
   console.log("📩 GitHub Event:", event);
 
-  let message = `📢 **${event?.toUpperCase()} EVENT**\n`;
-
   try {
+    let embed = null;
+
+    // 🚀 PUSH EVENT (MAIN ONE)
     if (event === "push") {
-      message += `📦 Repo: ${data.repository.full_name}\n`;
-      message += `👤 By: ${data.pusher.name}\n\n`;
-      message += `💬 Commits:\n`;
+      const commits = data.commits
+        .map(c => `• ${c.message}`)
+        .join("\n");
 
-      data.commits.forEach(c => {
-        message += `- ${c.message}\n`;
-      });
+      embed = {
+        title: "🚀 New Push",
+        url: data.repository.html_url,
+        color: 0xff004c,
+        author: {
+          name: data.repository.full_name
+        },
+        fields: [
+          {
+            name: "👤 Author",
+            value: data.pusher.name,
+            inline: true
+          },
+          {
+            name: "🔢 Commits",
+            value: `${data.commits.length}`,
+            inline: true
+          },
+          {
+            name: "💬 Messages",
+            value: commits || "No commits",
+            inline: false
+          }
+        ],
+        footer: {
+          text: "Lunify GitHub Logs"
+        },
+        timestamp: new Date()
+      };
     }
 
+    // 🍴 FORK
     else if (event === "fork") {
-      message += `🍴 Forked by: ${data.forkee.owner.login}`;
+      embed = {
+        title: "🍴 Repository Forked",
+        description: `Forked by **${data.forkee.owner.login}**`,
+        url: data.repository.html_url,
+        color: 0x00ff99
+      };
     }
 
+    // 🐛 ISSUE
     else if (event === "issues") {
-      message += `🐛 Issue: ${data.issue.title}`;
+      embed = {
+        title: "🐛 Issue Created",
+        description: `[${data.issue.title}](${data.issue.html_url})`,
+        color: 0xffcc00
+      };
     }
 
+    // 🔀 PULL REQUEST
     else if (event === "pull_request") {
-      message += `🔀 PR: ${data.pull_request.title}`;
+      embed = {
+        title: "🔀 Pull Request",
+        description: `[${data.pull_request.title}](${data.pull_request.html_url})`,
+        color: 0x5865F2
+      };
     }
 
-    else {
-      message += `Event triggered in ${data.repository?.full_name}`;
-    }
+    // 📡 DEFAULT (ignore noisy events)
+    if (!embed) return res.sendStatus(200);
 
-    // 🚀 SEND TO DISCORD
+    // 🚀 SEND EMBED TO DISCORD
     await fetch(DISCORD_WEBHOOK, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        content: message
+        embeds: [embed]
       })
     });
 
